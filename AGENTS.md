@@ -16,7 +16,7 @@ Don't use it to edit or repair a save: it never writes to a save.
 
 ## 3. Install
 
-From the release: download `sf-save-reader-<version>.zip` (latest 0.1.2) from https://github.com/taosecurity/sf-save-reader/releases and unzip it into an empty folder. The program is `sf-save-reader.exe` in the `sf-save-reader-<version>` folder inside it. The checksum is in `sf-save-reader-<version>.zip.sha256`.
+From the release: download `sf-save-reader-<version>.zip` (latest 0.1.3) from https://github.com/taosecurity/sf-save-reader/releases and unzip it into an empty folder. The program is `sf-save-reader.exe` in the `sf-save-reader-<version>` folder inside it. The checksum is in `sf-save-reader-<version>.zip.sha256`.
 
 From source:
 
@@ -34,7 +34,7 @@ The program is then `bin\Release\net9.0\sf-save-reader.exe`. The commands below 
 sf-save-reader --version
 ```
 
-Expected output: `sf-save-reader 0.1.2`, exit code 0.
+Expected output: `sf-save-reader 0.1.3`, exit code 0.
 
 To run the fragment tests (made-up data only, no saves needed): `dotnet test tests\SfsReader.Tests -c Release` (expect all tests passed).
 

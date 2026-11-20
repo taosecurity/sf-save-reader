@@ -233,7 +233,7 @@ Exit codes: 0 = done; 1 = done with warnings (or some quest records didn't decod
 
 ## JSON output
 
-`dump --json`, `records --json` and `quests --json` write one JSON object with `schemaVersion` (1 in sf-save-reader 0.1.2), `tool` (name and version), `file` and the data (`save` and `body`, `records`, or `quests`). A new field may be added without a new schema version; a field that is renamed or removed raises it.
+`dump --json`, `records --json` and `quests --json` write one JSON object with `schemaVersion` (1 in sf-save-reader 0.1.3), `tool` (name and version), `file` and the data (`save` and `body`, `records`, or `quests`). A new field may be added without a new schema version; a field that is renamed or removed raises it.
 
 ## Using it as a library
 

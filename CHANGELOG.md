@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.3 (2026-11-20)
+
+### What's new
+
+This is a small fix release. When a save is from an older version of Starfield, the message that tells you what to do now names the tool's real version. Before, it always said "sf-save-reader 0.1". Nothing about how saves are read has changed.
+
+### Example
+
+A save from an older game version (save version 152) is refused with exit code 3, and the fix line names the version you are running:
+
+    > sf-save-reader walk "OldSave.sfs"
+    ...
+    fix: sf-save-reader 0.1.3 reads change records for save version 153 (Starfield 1.16.244) only; `dump` still shows the header and plugin list of older saves. Load the save in the current game and save again to update it
+
+### Fixes
+
+- The fix line for a save version that isn't supported now uses the same name and version as `--version`, read from the program itself. A new test runs the program on a made-up save version 152 and checks it.
+
+### Download
+
+Download `sf-save-reader-0.1.3.zip`, unzip it to a folder and run `sf-save-reader.exe --version` in the `sf-save-reader-0.1.3` folder it makes. It needs the .NET 9 runtime (or later). The SHA-256 checksum is in `sf-save-reader-0.1.3.zip.sha256`.
+
 ## 0.1.2 (2026-11-20)
 
 ### What's new
