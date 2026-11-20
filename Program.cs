@@ -384,7 +384,7 @@ string Fix(Exception e)
         InvalidDataException when m.Contains("newer than this reader") =>
             "look for a newer sf-save-reader release; this one knows saves up to Starfield 1.16.244",
         InvalidDataException when m.Contains("isn't supported") =>
-            $"{tool} reads change records for save version 153 (Starfield 1.16.244) only; `dump` still shows " +
+            $"{tool} reads change records for save version {string.Join(", ", SaveBody.SupportedSaveVersions)} (Starfield 1.16.244) only; `dump` still shows " +
             "the header and plugin list of older saves. Load the save in the current game and save again to update it",
         InvalidDataException or ArgumentException or OverflowException or OutOfMemoryException =>
             "is this a Starfield .sfs save? A cut-off copy, a Game Pass save still in its container (see the README, " +

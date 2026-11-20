@@ -8,15 +8,15 @@ This is a small fix release. When a save is from an older version of Starfield, 
 
 ### Example
 
-A save from an older game version (save version 152) is refused with exit code 3, and the fix line names the version you are running:
+A test save marked as save version 152 (an older game version) is refused with exit code 3, and the fix line names the version you are running (the file name is shortened; the test save gives its game version as 9.9.9.0):
 
-    > sf-save-reader walk "OldSave.sfs"
-    ...
+    > sf-save-reader walk OldSave.sfs
+    error: OldSave.sfs: save version 152 (game 9.9.9.0) isn't supported; this reader reads save version 153 only
     fix: sf-save-reader 0.1.3 reads change records for save version 153 (Starfield 1.16.244) only; `dump` still shows the header and plugin list of older saves. Load the save in the current game and save again to update it
 
 ### Fixes
 
-- The fix line for a save version that isn't supported now uses the same name and version as `--version`, read from the program itself. A new test runs the program on a made-up save version 152 and checks it.
+- The fix line for a save version that isn't supported now uses the same name and version as `--version`, read from the program itself. A new test runs the program on a made-up save version 152 and checks it. The supported save version in that line now comes from the reader's own list too.
 
 ### Download
 

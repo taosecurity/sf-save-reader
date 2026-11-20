@@ -5,22 +5,31 @@ namespace SfsReader.Tests;
 
 /// <summary>Text shown to users names the tool's real version (from the assembly), never a hard-coded number.
 /// Runs the built sf-save-reader on a made-up save.</summary>
-public class VersionTextTests
+public class VersionTextTests(Xunit.Abstractions.ITestOutputHelper output)
 {
+    // The dotnet host that runs these tests (dotnet test sets DOTNET_HOST_PATH), else the one on PATH.
+    static string DotnetHost() =>
+        Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") is { Length: > 0 } host && File.Exists(host) ? host : "dotnet";
+
     static string AssemblyVersion() =>
         typeof(SaveFile).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
 
-    static (int Code, string Out, string Err) RunTool(params string[] args)
+    (int Code, string Out, string Err) RunTool(params string[] args)
     {
         string dll = Path.Combine(AppContext.BaseDirectory, "sf-save-reader.dll");
         Assert.True(File.Exists(dll), $"{dll} wasn't built next to the tests");
-        var psi = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        var psi = new ProcessStartInfo(DotnetHost()) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
         psi.ArgumentList.Add(dll);
         foreach (var a in args) psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
         var stdout = p.StandardOutput.ReadToEndAsync();
         var stderr = p.StandardError.ReadToEndAsync();
-        Assert.True(p.WaitForExit(60_000), "sf-save-reader didn't finish in 60 seconds");
+        if (!p.WaitForExit(60_000))
+        {
+            p.Kill(entireProcessTree: true);   // don't leave it running with the test save open
+            Assert.Fail("sf-save-reader didn't finish in 60 seconds");
+        }
+        output.WriteLine($"sf-save-reader {string.Join(" ", args)} -> exit {p.ExitCode}\n{stderr.Result}");
         return (p.ExitCode, stdout.Result, stderr.Result);
     }
 

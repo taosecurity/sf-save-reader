@@ -224,7 +224,7 @@ A save's file name holds the character ID and the player name (in hex), and the 
 
 ```
 error: Save12.sfs: save version 143 (game 1.14.74.0) isn't supported; this reader reads save version 153 only
-fix: sf-save-reader 0.1 reads change records for save version 153 (Starfield 1.16.244) only; ...
+fix: sf-save-reader 0.1.3 reads change records for save version 153 (Starfield 1.16.244) only; ...
 ```
 
 For a bug report, run the command again with `--log sf-save-reader.log --redact` and attach the log.
