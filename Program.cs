@@ -383,7 +383,7 @@ string Fix(Exception e)
         IOException => "close the program that has the file open (the game, an editor), or copy the save first",
         InvalidDataException when m.Contains("newer than this reader") =>
             "look for a newer sf-save-reader release; this one knows saves up to Starfield 1.16.244",
-        InvalidDataException when m.Contains("isn't supported") =>
+        InvalidDataException when m.Contains("isn't supported") && m.Contains("save version") =>
             $"{tool} reads change records for save version {string.Join(", ", SaveBody.SupportedSaveVersions)} (Starfield 1.16.244) only; `dump` still shows " +
             "the header and plugin list of older saves. Load the save in the current game and save again to update it",
         InvalidDataException or ArgumentException or OverflowException or OutOfMemoryException =>

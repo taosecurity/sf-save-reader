@@ -26,7 +26,8 @@ public class VersionTextTests(Xunit.Abstractions.ITestOutputHelper output)
         var stderr = p.StandardError.ReadToEndAsync();
         if (!p.WaitForExit(60_000))
         {
-            p.Kill(entireProcessTree: true);   // don't leave it running with the test save open
+            try { p.Kill(entireProcessTree: true); }   // don't leave it running with the test save open
+            catch (Exception e) when (e is InvalidOperationException or System.ComponentModel.Win32Exception) { }   // it just exited
             Assert.Fail("sf-save-reader didn't finish in 60 seconds");
         }
         output.WriteLine($"sf-save-reader {string.Join(" ", args)} -> exit {p.ExitCode}\n{stderr.Result}");
@@ -54,6 +55,7 @@ public class VersionTextTests(Xunit.Abstractions.ITestOutputHelper output)
             Assert.Equal(3, code);
             Assert.Contains("isn't supported", err);
             Assert.Contains($"fix: sf-save-reader {version} reads change records", err);
+            Assert.Contains($"for save version {string.Join(", ", SaveBody.SupportedSaveVersions)} (Starfield", err);
             // The same version --version prints.
             var (vcode, vout, _) = RunTool("--version");
             Assert.Equal(0, vcode);
