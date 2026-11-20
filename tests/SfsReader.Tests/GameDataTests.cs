@@ -178,6 +178,49 @@ public sealed class GameDataTests : IDisposable
     }
 
     [Fact]
+    public void Plugin_and_loose_strings_are_found_in_any_spelling()
+    {
+        // Linux and Proton file systems are case-sensitive; a save may spell the plugin differently from the file.
+        Masters();
+        Plugin("MixedCase.esm", 0x81, ["MadeUpMaster.esm"], Group("MISC", Record("MISC", 0x01000900, [.. Sub("EDID", Z("CaseThing")), .. Sub("FULL", U32(0x42))])));
+        Directory.CreateDirectory(Path.Combine(dir, "strings"));
+        File.WriteAllBytes(Path.Combine(dir, "strings", "MIXEDCASE_en.strings"), Strings((0x42, "Any Case Thing")));
+        var gd = new GameData(dir);
+        Assert.True(gd.HasPlugin("mixedcase.ESM"));
+        Assert.Equal("Any Case Thing  [CaseThing]", gd.Describe(Ref("mixedcase.esm", 0x900)));
+        Assert.Empty(gd.Warnings);
+    }
+
+    [Theory]
+    [InlineData("../x")]
+    [InlineData("..\\x")]
+    [InlineData("a/b")]
+    public void A_language_that_is_a_path_is_refused(string lang)
+    {
+        var e = Assert.Throws<ArgumentException>(() => new GameData(dir, lang));
+        Assert.Contains("isn't a language code", e.Message);
+        Assert.Equal("de", new GameData(dir, "de").Language);
+    }
+
+    [Fact]
+    public void A_plugins_ba2_is_found_in_any_spelling()
+    {
+        Masters();
+        Plugin("CaseBa.esm", 0x81, ["MadeUpMaster.esm"], Group("MISC", Record("MISC", 0x01000900, [.. Sub("EDID", Z("CaseBaThing")), .. Sub("FULL", U32(7))])));
+        var file = Strings((7, "Archived Any Case"));
+        var ms = new MemoryStream();
+        using (var z = new ZLibStream(ms, CompressionLevel.Optimal, leaveOpen: true)) z.Write(file);
+        var packed = ms.ToArray();
+        string name = "strings/CaseBa_en.strings";
+        long dataAt = 32 + 36, namesAt = dataAt + packed.Length;
+        var w = new Writer().Ascii("BTDX").U32(2).Ascii("GNRL").U32(1).U64((ulong)namesAt).U32(1).U32(0)
+            .U32(0).Ascii("stri").U32(0).U32(0).U64((ulong)dataAt).U32((uint)packed.Length).U32((uint)file.Length).U32(0xBAADF00D)
+            .Bytes(packed).Str(name);
+        File.WriteAllBytes(Path.Combine(dir, "caseba - localization.BA2"), w.ToArray());
+        Assert.Equal("Archived Any Case  [CaseBaThing]", new GameData(dir).Describe(Ref("CaseBa.esm", 0x900)));
+    }
+
+    [Fact]
     public void Placed_reference_is_described_by_its_base_object()
     {
         Masters();

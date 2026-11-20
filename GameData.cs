@@ -28,7 +28,23 @@ public sealed record PluginRecord(string Plugin, uint LocalId, uint FileFormId, 
 public sealed class GameData(string dataDir, string language = "en")
 {
     public string DataDir { get; } = dataDir;
-    public string Language { get; } = string.IsNullOrWhiteSpace(language) ? "en" : language;
+    public string Language { get; } = string.IsNullOrWhiteSpace(language) ? "en"
+        : language.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 && !language.Contains("..") && !language.Contains('/') && !language.Contains('\\')
+            ? language
+            : throw new ArgumentException($"--lang \"{language}\" isn't a language code; give one such as en, de or fr");
+
+    /// <summary>Whether the folder holds a file with this name, in any spelling (for checks before a GameData exists,
+    /// such as "does this folder hold Starfield.esm").</summary>
+    public static bool HasFile(string dir, string name)
+    {
+        if (File.Exists(Path.Combine(dir, name))) return true;
+        try
+        {
+            return Directory.Exists(dir) && Directory.EnumerateFiles(dir)
+                .Any(f => string.Equals(Path.GetFileName(f), name, StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return false; }
+    }
     public List<string> Warnings { get; } = [];
     /// <summary>Optional troubleshooting log (sf-save-reader --verbose / --log): which plugins were scanned, how many
     /// records matched, and where names came from. Null = no logging.</summary>
@@ -46,8 +62,68 @@ public sealed class GameData(string dataDir, string language = "en")
         if (string.IsNullOrEmpty(plugin) || plugin.StartsWith('?') || plugin.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             return false;
         if (!exists.TryGetValue(plugin, out bool e))
-            exists[plugin] = e = File.Exists(Path.Combine(DataDir, plugin));
+            exists[plugin] = e = FindFile(DataDir, plugin) != null;
         return e;
+    }
+
+    // File names matched without regard to case. Windows does this anyway; on Linux (and Proton) the file system is
+    // case-sensitive, while a save or a plugin's master list may spell a name differently from the file on disk.
+    // Each folder is listed once per GameData: the lookups are a snapshot of the Data folder, so a caller that
+    // installs files while it keeps a GameData object should make a new one.
+    readonly Dictionary<string, Dictionary<string, string>?> listings = new(StringComparer.Ordinal);
+
+    Dictionary<string, string>? Listing(string dir)
+    {
+        if (listings.TryGetValue(dir, out var l)) return l;
+        l = null;
+        try
+        {
+            if (Directory.Exists(dir))
+            {
+                l = new(StringComparer.OrdinalIgnoreCase);
+                // Sorted, so when two files differ only in case (possible on Linux) the same one wins on every run.
+                foreach (var f in Directory.EnumerateFiles(dir).OrderBy(f => f, StringComparer.Ordinal))
+                    if (!l.TryAdd(Path.GetFileName(f), f))
+                        Warn($"{dir}: {Path.GetFileName(l[Path.GetFileName(f)])} and {Path.GetFileName(f)} differ only in case; using the first");
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            l = null;
+            Warn($"{dir}: can't list the folder ({e.Message}); files are found only by their exact name");
+        }
+        listings[dir] = l;
+        return l;
+    }
+
+    /// <summary>The file's path in the folder, exact spelling first, then any spelling; null if it isn't there.</summary>
+    string? FindFile(string dir, string name)
+    {
+        string exact = Path.Combine(dir, name);
+        if (File.Exists(exact)) return exact;
+        return Listing(dir)?.GetValueOrDefault(name);
+    }
+
+    string PluginPath(string plugin) => FindFile(DataDir, plugin) ?? Path.Combine(DataDir, plugin);
+
+    // The loose Strings folder, any spelling ("Strings", "strings").
+    string? stringsDir;
+    bool stringsDirLooked;
+    string? StringsDir()
+    {
+        if (stringsDirLooked) return stringsDir;
+        stringsDirLooked = true;
+        string exact = Path.Combine(DataDir, "Strings");
+        if (Directory.Exists(exact)) return stringsDir = exact;
+        try
+        {
+            stringsDir = Directory.Exists(DataDir)
+                ? Directory.EnumerateDirectories(DataDir)
+                           .FirstOrDefault(d => string.Equals(Path.GetFileName(d), "Strings", StringComparison.OrdinalIgnoreCase))
+                : null;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { stringsDir = null; }
+        return stringsDir;
     }
 
     /// <summary>Reads the plugin's own records with these form numbers (one pass over the file for the ones not
@@ -157,7 +233,7 @@ public sealed class GameData(string dataDir, string language = "en")
         infos[plugin] = null;
         try
         {
-            var (flags, masters, end) = ReadHeader(Path.Combine(DataDir, plugin));
+            var (flags, masters, end) = ReadHeader(PluginPath(plugin));
             List<string> full = [], medium = [], light = [];
             foreach (var m in masters)
             {
@@ -190,7 +266,7 @@ public sealed class GameData(string dataDir, string language = "en")
         }
         try
         {
-            return PluginKind(ReadHeader(Path.Combine(DataDir, master)).Flags);
+            return PluginKind(ReadHeader(PluginPath(master)).Flags);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -233,7 +309,7 @@ public sealed class GameData(string dataDir, string language = "en")
 
     void Scan(string plugin, PluginInfo info, HashSet<uint> want, Dictionary<uint, PluginRecord?> known)
     {
-        string path = Path.Combine(DataDir, plugin);
+        string path = PluginPath(plugin);
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 20);
         long len = fs.Length, pos = info.FirstGroup;
         var h = new byte[24];
@@ -344,13 +420,14 @@ public sealed class GameData(string dataDir, string language = "en")
         string file = $"{baseName}_{Language}.strings";
         try
         {
-            string loose = Path.Combine(DataDir, "Strings", file);
-            if (File.Exists(loose))
+            if (StringsDir() is string sdir && FindFile(sdir, file) is string loose)
             {
                 Log?.Invoke($"{plugin}: names from loose {loose}");
                 return ParseStrings(File.ReadAllBytes(loose));
             }
-            var archives = Directory.EnumerateFiles(DataDir, $"{baseName} - *.ba2")
+            var archives = (Listing(DataDir)?.Values ?? Enumerable.Empty<string>())
+                .Where(p => Path.GetFileName(p) is string n && n.StartsWith($"{baseName} - ", StringComparison.OrdinalIgnoreCase)
+                            && n.EndsWith(".ba2", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(p => Path.GetFileName(p).EndsWith(" - Localization.ba2", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
                 .ThenBy(p => p, StringComparer.OrdinalIgnoreCase);
             foreach (var ba2 in archives)

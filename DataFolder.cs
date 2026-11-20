@@ -26,7 +26,7 @@ public static class DataFolder
     {
         foreach (var dir in Candidates().Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            bool ok = File.Exists(Path.Combine(dir, "Starfield.esm"));
+            bool ok = GameData.HasFile(dir, "Starfield.esm");
             log?.Invoke($"--data auto: {dir} {(ok ? "holds Starfield.esm, using it" : "(no Starfield.esm)")}");
             if (ok) return dir;
         }

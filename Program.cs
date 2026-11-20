@@ -359,7 +359,7 @@ GameData? Game(string[] a)
         current = dir;
         throw new DirectoryNotFoundException("the --data folder doesn't exist");
     }
-    if (!File.Exists(Path.Combine(dir, "Starfield.esm")))
+    if (!GameData.HasFile(dir, "Starfield.esm"))
         Console.Error.WriteLine($"warning: {dir} has no Starfield.esm; is it the game's Data folder?");
     Log($"--data: {dir}");
     return new GameData(dir, Opt(a, "--lang") ?? "en") { Log = Log };
