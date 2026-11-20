@@ -383,9 +383,6 @@ string Fix(Exception e)
         IOException => "close the program that has the file open (the game, an editor), or copy the save first",
         InvalidDataException when m.Contains("newer than this reader") =>
             "look for a newer sf-save-reader release; this one knows saves up to Starfield 1.16.244",
-        InvalidDataException when m.Contains("compression method") && m.Contains("isn't supported") =>
-            "a BA2 archive in the Data folder packs a file in a way this reader can't unpack yet (it reads zlib only). " +
-            "Run without --data (and with STARFIELD_DATA unset) to skip names from the game files, or run with --verbose and include the log in a bug report",
         InvalidDataException when m.StartsWith("save version") && m.Contains("isn't supported") =>
             $"{tool} reads change records for save version {string.Join(", ", SaveBody.SupportedSaveVersions)} (Starfield 1.16.244) only; `dump` still shows " +
             "the header and plugin list of older saves. Load the save in the current game and save again to update it",
