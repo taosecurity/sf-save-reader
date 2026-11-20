@@ -11,11 +11,14 @@ Don't use it to edit or repair a save: it never writes to a save.
 ## 2. Prerequisites
 
 1. Windows 10 or 11 (Linux works for the commands; `--data auto` then checks `~/.steam/steam` only).
-2. The .NET SDK 9.0 or later (tested with 10.0.404, building for net9.0). Check with `dotnet --version`.
-3. Git, to clone the repository.
-4. For names (`--data`): an installed copy of Starfield (Steam or Game Pass).
+2. To run the release zip: the .NET 9 runtime or later. To build from source: the .NET SDK 9.0 or later (tested with 10.0.404, building for net9.0) and Git. Check with `dotnet --version`.
+3. For names (`--data`): an installed copy of Starfield (Steam or Game Pass).
 
 ## 3. Install
+
+From the release: download `sf-save-reader-<version>.zip` (latest 0.1.2) from https://github.com/taosecurity/sf-save-reader/releases and unzip it into an empty folder. The program is `sf-save-reader.exe` in the `sf-save-reader-<version>` folder inside it. The checksum is in `sf-save-reader-<version>.zip.sha256`.
+
+From source:
 
 ```
 git clone https://github.com/taosecurity/sf-save-reader
@@ -23,7 +26,7 @@ cd sf-save-reader
 dotnet build -c Release
 ```
 
-The program is `bin\Release\net9.0\sf-save-reader.exe`. The commands below call it `sf-save-reader`; use the full path, or add the folder to PATH.
+The program is then `bin\Release\net9.0\sf-save-reader.exe`. The commands below call it `sf-save-reader`; use the full path, or add the folder to PATH.
 
 ## 4. Prove the install works
 
