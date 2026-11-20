@@ -17,7 +17,7 @@ A test save marked as save version 152 (an older game version) is refused with e
 ### Fixes
 
 - The fix line for a save version that isn't supported now uses the same name and version as `--version`, read from the program itself. A new test runs the program on a made-up save version 152 and checks it. The supported save version in that line now comes from the reader's own list too.
-- A BA2 archive that uses a compression method other than zlib no longer gets that same fix line (which told you to load and save your game again). It now gets the general fix line for files that can't be read.
+- A BA2 archive that uses a compression method other than zlib no longer gets that same fix line (which told you to load and save your game again). It now gets its own fix line, which says the archive uses a packing this reader can't unpack yet and how to run without the game files.
 
 ### Download
 

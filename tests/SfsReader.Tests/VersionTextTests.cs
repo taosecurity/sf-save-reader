@@ -26,9 +26,12 @@ public class VersionTextTests(Xunit.Abstractions.ITestOutputHelper output)
         var stderr = p.StandardError.ReadToEndAsync();
         if (!p.WaitForExit(60_000))
         {
-            try { p.Kill(entireProcessTree: true); }   // don't leave it running with the test save open
-            catch (Exception e) when (e is InvalidOperationException or System.ComponentModel.Win32Exception) { }   // it just exited
-            Assert.Fail("sf-save-reader didn't finish in 60 seconds");
+            try
+            {
+                p.Kill(entireProcessTree: true);   // don't leave it running with the test save open
+                Assert.Fail("sf-save-reader didn't finish in 60 seconds");
+            }
+            catch (InvalidOperationException) { p.WaitForExit(); }   // it exited just after the wait: carry on
         }
         output.WriteLine($"sf-save-reader {string.Join(" ", args)} -> exit {p.ExitCode}\n{stderr.Result}");
         return (p.ExitCode, stdout.Result, stderr.Result);
