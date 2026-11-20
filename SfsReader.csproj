@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>sf-save-reader</AssemblyName>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Product>sf-save-reader</Product>
     <Description>Read-only reader for Starfield .sfs save files: header, plugin list, change records and quest state.</Description>
     <Copyright>Copyright (c) 2026 Richard Bejtlich</Copyright>

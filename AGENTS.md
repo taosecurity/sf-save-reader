@@ -31,7 +31,7 @@ The program is `bin\Release\net9.0\sf-save-reader.exe`. The commands below call 
 sf-save-reader --version
 ```
 
-Expected output: `sf-save-reader 0.1.1`, exit code 0.
+Expected output: `sf-save-reader 0.1.2`, exit code 0.
 
 To run the fragment tests (made-up data only, no saves needed): `dotnet test tests\SfsReader.Tests -c Release` (expect all tests passed).
 
