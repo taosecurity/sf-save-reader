@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>sf-save-reader</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>sf-save-reader</Product>
+    <Description>Read-only reader for Starfield .sfs save files: header, plugin list, change records and quest state.</Description>
+    <Copyright>Copyright (c) 2026 Richard Bejtlich</Copyright>
+    <RootNamespace>SfsReader</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- The fragment tests are their own project. -->
+  <ItemGroup>
+    <Compile Remove="tests\**" />
+    <None Remove="tests\**" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,4 @@
+bin/
+obj/
+*.sfs
+*.bin
