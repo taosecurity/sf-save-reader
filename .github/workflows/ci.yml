@@ -1,0 +1,67 @@
+# Runs the fragment tests on Windows and Linux, checks that the program starts and gives the documented exit codes
+# for bad input, and builds the Release publish folder that the release zip is made from. The tests use made-up byte
+# fragments only, so no game, no Data folder and no real save is needed.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "9.0.x"
+      - name: Tests
+        run: dotnet test tests/SfsReader.Tests -c Release
+      - name: Release publish (what the zip is made from)
+        run: dotnet publish SfsReader.csproj -c Release -f net9.0 --self-contained false -o publish
+      - name: The program starts and gives the documented exit codes
+        run: |
+          set -u
+          run() { dotnet publish/sf-save-reader.dll "$@"; }
+          expect() { want=$1; shift; set +e; run "$@" > out.txt 2>&1; got=$?; set -e
+                     cat out.txt; echo "exit $got (expected $want)"; [ "$got" -eq "$want" ]; }
+          expect 0 --version
+          grep -q "^sf-save-reader " out.txt
+          expect 2                                  # no command: usage, exit 2
+          expect 2 dump                             # a command without a save
+          printf 'not a save' > notasave.sfs
+          expect 3 dump notasave.sfs                # a file that isn't a save
+          grep -q "^error: " out.txt                # each on its own line: bash -e ignores a failing grep in an && list
+          grep -q "^fix: " out.txt
+          expect 3 walk missing.sfs                 # a file that doesn't exist
+          expect 3 dump notasave.sfs --redact
+          if grep -q notasave out.txt; then echo "--redact left the file name in"; exit 1; fi
+          # --log never writes over a save: a .sfs name, the input file itself, or a file that starts like a save
+          expect 2 dump notasave.sfs --log notasave.sfs
+          printf 'BCPSxxxxxxxx' > input.dat
+          expect 2 dump input.dat --log input.dat
+          cp input.dat other.log
+          expect 2 dump input.dat --log other.log
+          [ "$(cat notasave.sfs)" = "not a save" ] && [ "$(cat input.dat)" = "BCPSxxxxxxxx" ]
+          [ "$(cat other.log)" = "BCPSxxxxxxxx" ]
+          # --redact on an error whose .NET message holds the full path (Linux: a file this account can't read)
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            printf 'not a save' > Save1_Secretname.sfs
+            chmod 000 Save1_Secretname.sfs
+            expect 3 dump Save1_Secretname.sfs --redact
+            if grep -q Secretname out.txt; then echo "--redact left the file name in"; exit 1; fi
+            expect 3 dump Save1_Secretname.sfs  # without --redact the path is shown
+            grep -q Secretname out.txt
+          fi
