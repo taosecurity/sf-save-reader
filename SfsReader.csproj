@@ -6,12 +6,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>sf-save-reader</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Product>sf-save-reader</Product>
     <Description>Read-only reader for Starfield .sfs save files: header, plugin list, change records and quest state.</Description>
     <Copyright>Copyright (c) 2026 Richard Bejtlich</Copyright>
     <RootNamespace>SfsReader</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Release builds map source paths to /_/, so no local build folder ends up in the DLL. -->
+    <ContinuousIntegrationBuild Condition="'$(Configuration)' == 'Release'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <!-- The fragment tests are their own project. -->

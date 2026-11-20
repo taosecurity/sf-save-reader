@@ -24,6 +24,89 @@ bin\Release\net9.0\sf-save-reader.exe dump "%USERPROFILE%\Documents\My Games\Sta
 
 Put the path in quotes: save folders and names often have spaces.
 
+## Sample output
+
+These excerpts come from a real save of a new character in a large mod list (the Star Wars Genesis Wabbajack list, 169 plugins), made with sf-save-reader 0.1.1. Lines marked `...` were left out to keep them short.
+
+`dump --redact` shows the header and the plugin list, with the player name and the file name hidden:
+
+```
+> sf-save-reader dump "Exitsave0_....sfs" --redact
+File            (redacted)
+Container       BCPS v1, ZIP x41 chunks of 262,144, align 16, 3,218,128 -> 10,649,236 bytes
+Engine / save   27 / 153  (header 120 bytes)
+Save number     3
+Player          (redacted), level 1, HumanRace, gender 0
+Experience      145 / 1000
+Location        Coruscant - Spaceport
+Playtime        0 days 0 hours 4 minutes
+Saved (UTC)     2026-11-17 22:56:10.878
+Game version    1.16.244.0 (created 1.16.244.0)
+Plugins         169 (114 full, 49 light, 6 medium)
+  full   Starfield.esm
+  full   ShatteredSpace.esm
+  full   SFBGS00D.esm
+  full   SFBGS050.esm
+  full   GenesisFreeLanes.esm
+  ...
+  full   Tatooine.esm
+  full   Endor.esm
+  full   Mustafar.esm
+  ...
+Counts          global data 1/2/3 = 17/21/9, change forms = 28564
+Sections (label = Fallout 4 naming, inference)
+  0x00000000        10,421  header+plugins
+  0x000028B5           100  location table
+  0x00002919       535,700  global data 1
+  0x000855AD        26,891  global data 2
+  0x0008BEB8     8,382,504  change forms
+  0x0088A6E0     1,036,832  global data 3
+  0x00987900        90,368  form ID array
+  0x0099DA00       566,420  table 3
+```
+
+`quests --data` lists every quest the save holds, with its state and its name from the plugins in the Data folder:
+
+```
+> sf-save-reader quests "Exitsave0_....sfs" --data "D:\Games\Starfield\Data"
+00003448 Starfield.esm:3448                      running, stage 1510  One Small Step  [MQ101]
+...
+001C0F26 Starfield.esm:1C0F26                    stopped, completed, stage 200  Board and Lodging  [FFLodge01]
+...
+2D0009CD du_overtime.esm:9CD                     running, stage 5  Claims Assessment: Coruscant GalBank  [duo_MB27a_qst]
+3F000CC2 Tatooine.esm:CC2                        running, stage -  Hutt Vendor Dialogue  [DialogueGenericVendor_Hutt]
+3F000DC2 Tatooine.esm:DC2                        running, stage -  Jawa Vendor Dialogue  [DialogueGenericVendor_Jawa]
+4700326F FugitiveHideout.esm:326F                running, stage 1  Deserter  [PatientWave_CloneDeserter]
+49000810 ForcePowerTrainer.esm:810               running, stage 0  LevelUp  [Ask_Skills_LevelUpQuest]
+6100086E Mojo_JetpackController.esm:86E          running, stage 0  Jetpack Quest  [MJENC_JetpackQuest]
+...
+597 quest records: 597 decoded exactly, 0 not decoded
+```
+
+"stage -" means that no stage of the quest is done yet. Add `--filter <text>` to show only matching quests, and `--details` to list each quest's stages (a `*` marks a done stage) and objective states:
+
+```
+> sf-save-reader quests "Exitsave0_....sfs" --data "D:\Games\Starfield\Data" --filter "Board and Lodging" --details
+001C0F26 Starfield.esm:1C0F26                    stopped, completed, stage 200  Board and Lodging  [FFLodge01]
+    stages: 10* 20 30 50 100 200*
+    objectives: 10=3 20=2
+597 quest records: 597 decoded exactly, 0 not decoded
+```
+
+`walk --redact` reads every change record and checks that the save's own counts and offsets agree:
+
+```
+> sf-save-reader walk "Exitsave0_....sfs" --redact
+File            (redacted)
+Form-ID array   22,591 IDs at 0x987900
+Type directory  21 groups, 28,564 records
+Change records  28,564 read (slot [9] = 28,564), from 0x8BEB8 to 0x88A6E0 (slot [5] = 0x88A6E0, exact)
+References      767,303: kind 0 = 447,749, kind 1 = 242,915, kind 2 = 76,639
+...
+Created records 15,272
+Quest records   597
+```
+
 ## What it reads
 
 - **Every save version:** the container, the header (player name, level, location, play time, game version) and the plugin list (full, medium and light plugins, with each Creation's name).

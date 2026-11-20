@@ -473,7 +473,7 @@ void PrintDump(string file, SfsContainer c, SaveGame g)
     Console.WriteLine($"Plugins         {g.Plugins.Count} ({g.Plugins.Count(p => p.Kind == "full")} full, " +
                       $"{g.Plugins.Count(p => p.Kind == "light")} light, {g.Plugins.Count(p => p.Kind == "medium")} medium)");
     foreach (var p in g.Plugins)
-        Console.WriteLine($"  {p.Kind,-6} {p.Name}{(p.HasExtra ? $"  [{p.CreationName}]" : "")}");
+        Console.WriteLine($"  {p.Kind,-6} {p.Name}{(p.HasExtra && !string.IsNullOrEmpty(p.CreationName) ? $"  [{p.CreationName}]" : "")}");
     Console.WriteLine($"After plugins   unknown u16 = {g.PostPluginUnknown?.ToString() ?? "(absent)"}");
     Console.WriteLine($"Counts          global data 1/2/3 = {g.GlobalData1Count}/{g.GlobalData2Count}/{g.GlobalData3Count}, change forms = {g.ChangeFormCount}");
     Console.WriteLine("Sections (label = Fallout 4 naming, inference)");
