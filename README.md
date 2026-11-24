@@ -214,6 +214,8 @@ With `--data <folder>`, `records` and `quests` add each form's name and editor I
 
 ## Privacy: `--redact`
 
+sf-save-reader collects nothing and makes no network calls. See [PRIVACY.md](PRIVACY.md) for what it reads and writes.
+
 A save's file name holds the character ID and the player name (in hex), and the header holds the player name. `--redact` replaces both with `(redacted)` in the output and the log, so you can share the output. Plugin names, locations and quest states stay. The format has no platform or account ID field that sf-save-reader reads.
 
 ## Logging and troubleshooting
